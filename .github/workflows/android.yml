@@ -20,9 +20,19 @@ jobs:
 
     - name: Build APK
       run: |
-        find . -name "build.gradle"
-        chmod +x gradlew || true
-        ./gradlew assembleDebug || gradle assembleDebug
+        GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+        if [ -z "$GRADLEW_PATH" ]; then
+          echo "Gradlew not found, installing gradle..."
+          sudo apt-get update && sudo apt-get install -y gradle
+          PROJECT_DIR=$(find . -name "build.gradle" -exec dirname {} \; | head -n 1)
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
+        else
+          DIR=$(dirname "$GRADLEW_PATH")
+          cd "$DIR"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        fi
 
     - name: Upload APK
       uses: actions/upload-artifact@v3
